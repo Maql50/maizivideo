@@ -8,10 +8,20 @@ import requests
 import chardet
 import os
 import thread,threading
+import Queue
 from requests.adapters import HTTPAdapter
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
+
+class DownloadThread(threading.Thread):
+	def __init__(self, video_url_full, file_full_name):
+		threading.Thread.__init__(self)
+		self.video_url_full = video_url_full
+		self.file_full_name = file_full_name
+
+	def run(self):
+		startDownload(self.video_url_full, self.file_full_name)
 
 class MaiZiVideo(object):
 
@@ -32,8 +42,16 @@ class MaiZiVideo(object):
 			else:
 				video_url_full = video_url + str(count) + ".mp4"
 
-			urllib.urlretrieve(video_url_full, file_dir + class_name + "/" + each_class_name + ".mp4", Schedule)
+			#thread_list = []
+			#thread_list.append(DownloadThread(video_url_full, file_dir + class_name + "/" + each_class_name + ".mp4"))
+			download_thread = DownloadThread(video_url_full, file_dir + class_name + "/" + each_class_name + ".mp4")
+			if count < 2:
+				download_thread.start()
 			count += 1
+
+def startDownload(video_url_full, file_full_name):
+	urllib.urlretrieve(video_url_full, file_full_name, Schedule)
+
 
 def Schedule(downloadSize, dataSize, remotelyFileSize):
 	'''
@@ -48,7 +66,10 @@ def Schedule(downloadSize, dataSize, remotelyFileSize):
 	print u'当前下载进度:%.2f%%\r' % per
 
 if __name__ == '__main__':
-	page_url = 'http://www.maiziedu.com/course/645/'
-	video_url = 'http://newoss.maiziedu.com/pcjc/pcjc-'
-	file_dir = u'D:/personal/video/program/python/'
+	#queue = Queue()
+	#queue.LifoQueue(maxsize = 3)
+	page_url = 'http://www.maiziedu.com/course/458/'
+	video_url = 'http://newoss.maiziedu.com/qiniu/Scrapy-'
+	file_dir = u'D:/BaiduYunDownload/python/'
 	MaiZiVideo.download_video(page_url, video_url, file_dir)
+
